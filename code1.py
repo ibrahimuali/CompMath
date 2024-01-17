@@ -22,7 +22,7 @@ t=pd.date_range ( start ='30/11/2013',end ='30/11/2023 ', freq ='M')
 tD= dfd[[ 'Exchange Date']]
 
 #creating a list with company names for the for loop plotting
-data =pd.read_excel('monthly prices equities.xlsx ',header=None, index_col =None ,na_values =['NA'])
+dataaaaaaaq =pd.read_excel('monthly prices equities.xlsx ',header=None, index_col =None ,na_values =['NA'])
 company_names = data.iloc[0, 1:].tolist()
 #plotting levels and log-levels for every equity monthly
 for i in company_names:
