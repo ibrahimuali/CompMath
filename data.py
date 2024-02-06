@@ -66,10 +66,14 @@ tau2 = 1
 
 params_NS = [beta0, beta1, beta2, tau]
 
-#Parameters for Gradient Descent
+#Parameters for Gradient Descent and Newton
 alpha_0 = 1
 apx_LS = True
 N = 50
+
+#folder
+save_folder = 'ibrahimuali/Documents/GitHub/CompMath/US'
+
 
 # Compute R
 #all_df_joint_germany[20]['Nelson-Siegel'] = fun.compute_R(all_df_joint_germany[20]['Maturity'], params_NS=params_NS)
@@ -95,10 +99,6 @@ for index, df in enumerate(all_df_joint_us):
 df_params = pd.DataFrame(params_values_list)
 df_f = pd.DataFrame(f_values_list)
 
-with pd.ExcelWriter('ParametersValues.xlsx') as writer:
-    df_params.to_excel(writer, sheet_name='Params', index=False)
-    df_f.to_excel(writer, sheet_name='F_values', index=False)
-
 #Paste Optimal Values into DFs and Plot them
 for index, df in enumerate(all_df_joint_us):
     # Extract parameter values from df_params
@@ -112,7 +112,7 @@ for index, df in enumerate(all_df_joint_us):
     df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS_optimal)
     # Plot the curve
     time = range(1, len(df['Yield']) + 1)
-    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], method = 'Gradient Descent')
+    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], method = 'Gradient Descent', save_folder = save_folder)
     
     
 #Newton Method
@@ -131,7 +131,10 @@ for index, df in enumerate(all_df_joint_us):
 df_params_newton = pd.DataFrame(params_values_newton)
 df_f_newton = pd.DataFrame(f_values_list_newton)
 
+#Save everything in Excel
 with pd.ExcelWriter('ParametersValues.xlsx') as writer:
+    df_params.to_excel(writer, sheet_name='Params', index=False)
+    df_f.to_excel(writer, sheet_name='F_values', index=False)
     df_params.to_excel(writer, sheet_name='Params_Newton', index=False)
     df_f.to_excel(writer, sheet_name='F_values_Newton', index=False)
     
@@ -152,5 +155,5 @@ for index, df in enumerate(all_df_joint_us):
     df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS_optimal)
     # Plot the curve
     time = range(1, len(df['Yield']) + 1)
-    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], method = 'Newton')
+    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], method = 'Newton', save_folder = save_folder)
     

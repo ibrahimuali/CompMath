@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 def clear_df(df):
     '''
@@ -71,7 +72,7 @@ def compute_f(yields, tau, params_NS=None, params_NSS=None, tau2=None):
              residuals = yields - compute_R(tau, params_NSS=params_NSS, tau2=tau2)
         return np.sum(residuals**2)
     
-def plot_curve(time, yields, R, method = ''):
+def plot_curve(time, yields, R, method = '', save_folder=''):
         """
         Plots the curve (t, R(t)) using the computed R(t) values and the historical yield data.
         """
@@ -82,6 +83,10 @@ def plot_curve(time, yields, R, method = ''):
             plt.ylabel('Yield')
             plt.title('Nelson-Siegel Curve vs Historical Yield Data [Newton]')
             plt.legend()
+            #if save_folder:
+                # Save the plot to the specified folder
+               # plt.savefig(os.path.join(save_folder, 'plot_newton.png'))
+            #else:
             plt.show()
         else: 
             plt.plot(time, yields, label='Historical Yield Data')
@@ -90,4 +95,9 @@ def plot_curve(time, yields, R, method = ''):
             plt.ylabel('Yield')
             plt.title('Nelson-Siegel Curve vs Historical Yield Data [Gradient Descent]')
             plt.legend()
+            plt.show()
+           # if save_folder:
+                # Save the plot to the specified folder
+              #  plt.savefig(os.path.join(save_folder, 'plot_Gradient Descent.png'))
+            #else:
             plt.show()
