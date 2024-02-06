@@ -6,8 +6,10 @@ import numpy as np
 import maths as ma
 
 germany_1 = pd.read_csv('Bond/Germany 1-Year Bond Yield Historical Data.csv')
+germany_2 = pd.read_csv('Bond/Germany 2-Year Bond Yield Historical Data.csv')
 germany_3 = pd.read_csv('Bond/Germany 3-Year Bond Yield Historical Data.csv')
 germany_5 = pd.read_csv('Bond/Germany 5-Year Bond Yield Historical Data.csv')
+germany_7 = pd.read_csv('Bond/Germany 7-Year Bond Yield Historical Data.csv')
 germany_10 = pd.read_csv('Bond/Germany 10-Year Bond Yield Historical Data.csv')
 
 usa_1 = pd.read_csv('Bond/United States 1-Year Bond Yield Historical Data.csv')
@@ -18,27 +20,43 @@ usa_7 = pd.read_csv('Bond/United States 7-Year Bond Yield Historical Data.csv')
 usa_10 = pd.read_csv('Bond/United States 10-Year Bond Yield Historical Data.csv')
 
 portugal_1 = pd.read_csv('Bond/Portugal 1-Year Bond Yield Historical Data.csv')
+portugal_2 = pd.read_csv('Bond/Portugal 2-Year Bond Yield Historical Data.csv')
+portugal_3 = pd.read_csv('Bond/Portugal 3-Year Bond Yield Historical Data.csv')
 portugal_5 = pd.read_csv('Bond/Portugal 5-Year Bond Yield Historical Data.csv')
+portugal_7 = pd.read_csv('Bond/Portugal 7-Year Bond Yield Historical Data.csv')
+portugal_10 = pd.read_csv('Bond/Portugal 10-Year Bond Yield Historical Data.csv')
 
+# Germany
 germany_1_df = pd.DataFrame(germany_1)
+germany_2_df = pd.DataFrame(germany_2)
 germany_3_df = pd.DataFrame(germany_3)
 germany_5_df = pd.DataFrame(germany_5)
+germany_7_df = pd.DataFrame(germany_7)
 germany_10_df = pd.DataFrame(germany_10)
 
-portugal_1_df =pd.DataFrame(portugal_1)
-portugal_5_df = pd.DataFrame(portugal_5)
-    
-# Germany
 germany_1_df_clear = fun.clear_df(germany_1_df)
+germany_2_df_clear = fun.clear_df(germany_2_df)
 germany_3_df_clear = fun.clear_df(germany_3_df)
 germany_5_df_clear = fun.clear_df(germany_5_df)
+germany_7_df_clear = fun.clear_df(germany_7_df)
 germany_10_df_clear = fun.clear_df(germany_10_df)
-#all_df_joint_germany = fun.join_df_date(germany_1_df_clear, germany_3_df_clear, germany_5_df_clear, germany_10_df_clear, 1, 3, 5, 10)
+all_df_joint_germany = fun.join_df_date(germany_1_df_clear, germany_2_df_clear, germany_3_df_clear, germany_5_df_clear, germany_7_df_clear, germany_10_df_clear, 1, 2, 3, 5, 7, 10)
 
 # Portugal
+portugal_1_df = pd.DataFrame(portugal_1)
+portugal_2_df = pd.DataFrame(portugal_2)
+portugal_3_df = pd.DataFrame(portugal_3)
+portugal_5_df = pd.DataFrame(portugal_5)
+portugal_7_df = pd.DataFrame(portugal_7)
+portugal_10_df = pd.DataFrame(portugal_10)
+
 portugal_1_df_clear = fun.clear_df(portugal_1_df)
+portugal_2_df_clear = fun.clear_df(portugal_2_df)
+portugal_3_df_clear = fun.clear_df(portugal_3_df)
 portugal_5_df_clear = fun.clear_df(portugal_5_df)
-#all_df_joint_portugal = fun.join_df_date(portugal_1_df_clear, portugal_5_df_clear, 1, 5)
+portugal_7_df_clear = fun.clear_df(portugal_7_df)
+portugal_10_df_clear = fun.clear_df(portugal_10_df)
+all_df_joint_portugal = fun.join_df_date(portugal_1_df_clear, portugal_2_df_clear, portugal_3_df_clear, portugal_5_df_clear, portugal_7_df_clear, portugal_10_df_clear, 1, 2, 3, 5, 7, 10)
 
 #US
 us_1_df = pd.DataFrame(usa_1)
@@ -66,14 +84,10 @@ tau2 = 1
 
 params_NS = [beta0, beta1, beta2, tau]
 
-#Parameters for Gradient Descent and Newton
+#Parameters for Gradient Descent
 alpha_0 = 1
 apx_LS = True
 N = 50
-
-#folder
-save_folder = 'ibrahimuali/Documents/GitHub/CompMath/US'
-
 
 # Compute R
 #all_df_joint_germany[20]['Nelson-Siegel'] = fun.compute_R(all_df_joint_germany[20]['Maturity'], params_NS=params_NS)
@@ -82,6 +96,11 @@ for index, df in enumerate(all_df_joint_us):
     df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS)
     # Export the dataframe to Excel
     #df.to_excel(f'data_{index}.xlsx')
+
+# Compute f and minimize
+#params_values, f_values = lb.gradient_descent(lambda params: fun.compute_f(all_df_joint_germany[10]['Yield'], all_df_joint_germany[10]['Maturity'], params_NS=params), params_NS, alpha_0 = alpha_0, apx_LS = apx_LS, N = 100)
+#df_params = pd.DataFrame(params_values)
+#df_f = pd.DataFrame(f_values)
 
 # Loop over each dataframe in all_df_joint_germany
 params_values_list = []
