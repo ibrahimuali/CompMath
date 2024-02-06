@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def clear_df(df):
     '''
@@ -15,7 +16,7 @@ def clear_df(df):
     df = df[::-1]
     return df
 
-def join_df_date(df1, df2, df3, df4, maturity1, maturity2, maturity3, maturity4):
+def join_df_date(df1, df2, df3, df4, df5, df6, maturity1, maturity2, maturity3, maturity4, maturity5, maturity6):
     '''
     Join two Dataframe with a column for Price and other one for Maturity for each month.
     
@@ -24,9 +25,9 @@ def join_df_date(df1, df2, df3, df4, maturity1, maturity2, maturity3, maturity4)
         It is a list of Dataframe of each month
     '''
     all_df = []
-    data = {'Maturity': [maturity1, maturity2, maturity3, maturity4]}
+    data = {'Maturity': [maturity1, maturity2, maturity3, maturity4, maturity5, maturity6]}
     for i in range(len(df1)):
-        price = {'Yield': [df1['Price'].iloc[i], df2['Price'].iloc[i], df3['Price'].iloc[i], df4['Price'].iloc[i]]}
+        price = {'Yield': [df1['Price'].iloc[i], df2['Price'].iloc[i], df3['Price'].iloc[i], df4['Price'].iloc[i], df5['Price'].iloc[i], df6['Price'].iloc[i]]}
         df_new = pd.DataFrame({**data, **price})
         all_df.append(df_new)
     return all_df
@@ -69,3 +70,24 @@ def compute_f(yields, tau, params_NS=None, params_NSS=None, tau2=None):
         else:
              residuals = yields - compute_R(tau, params_NSS=params_NSS, tau2=tau2)
         return np.sum(residuals**2)
+    
+def plot_curve(time, yields, R, method = ''):
+        """
+        Plots the curve (t, R(t)) using the computed R(t) values and the historical yield data.
+        """
+        if method == 'Newton':
+            plt.plot(time, yields, label='Historical Yield Data')
+            plt.plot(time, R, label='Nelson-Siegel Curve [Newton]')
+            plt.xlabel('Time')
+            plt.ylabel('Yield')
+            plt.title('Nelson-Siegel Curve vs Historical Yield Data [Newton]')
+            plt.legend()
+            plt.show()
+        else: 
+            plt.plot(time, yields, label='Historical Yield Data')
+            plt.plot(time, R, label='Nelson-Siegel Curve [Gradient Descent]')
+            plt.xlabel('Time')
+            plt.ylabel('Yield')
+            plt.title('Nelson-Siegel Curve vs Historical Yield Data [Gradient Descent]')
+            plt.legend()
+            plt.show()

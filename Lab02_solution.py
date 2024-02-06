@@ -48,7 +48,7 @@ def approx_hessian(x, f):
     return hessian
 
 
-def gradient_descent(f, x_0, alpha_0=0.05, apx_LS=False, N=50, eps = 1e-4):
+def gradient_descent(f, x_0, alpha_0, apx_LS, N, eps = 1e-4):
     x_values = [x_0]
     f_values = [f(x_0)]
 
@@ -73,7 +73,7 @@ def gradient_descent(f, x_0, alpha_0=0.05, apx_LS=False, N=50, eps = 1e-4):
     print('Gradient descent method performed ' + str(i+1) + ' iterations')
     return x_values, f_values
 
-def apx_line_search(f, x, d, c = 0.1, t = 0.9, alpha_0 = 1):
+def apx_line_search(f, x, d, alpha_0, c = 0.1, t = 0.9):
 
     alpha = alpha_0
     f_x = f(x)
