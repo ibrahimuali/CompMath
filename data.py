@@ -3,7 +3,6 @@ import Lab02_solution as lb
 import fun
 import pprint
 import numpy as np
-import maths as ma
 
 germany_1 = pd.read_csv('Bond/Germany 1-Year Bond Yield Historical Data.csv')
 germany_2 = pd.read_csv('Bond/Germany 2-Year Bond Yield Historical Data.csv')
@@ -108,8 +107,10 @@ f_values_list = []
 
 # Loop over each dataframe in all_df_joint_germany
 for index, df in enumerate(all_df_joint_us):
+    
     # Compute f and minimize using gradient descent
     params_values, f_values = lb.gradient_descent(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params), params_NS, alpha_0=alpha_0, apx_LS=apx_LS, N = N)
+    
     # Append results to lists
     params_values_list.append(params_values)
     f_values_list.append(f_values)
@@ -120,15 +121,19 @@ df_f = pd.DataFrame(f_values_list)
 
 #Paste Optimal Values into DFs and Plot them
 for index, df in enumerate(all_df_joint_us):
+
     # Extract parameter values from df_params
     beta0 = df_params[N][index][0]
     beta1 = df_params[N][index][1]
     beta2 = df_params[N][index][2]
     tau = df_params[N][index][3]
+    
     # Create params_NS list
     params_NS_optimal = [beta0, beta1, beta2, tau]
+    
     # Compute Nelson-Siegel curve values
     df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS_optimal)
+    
     # Plot the curve
     time = range(1, len(df['Yield']) + 1)
     fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], method = 'Gradient Descent', save_folder = save_folder)
