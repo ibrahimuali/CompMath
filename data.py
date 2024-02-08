@@ -3,7 +3,9 @@ import Lab02_solution as lb
 import fun
 import pprint
 import numpy as np
+from scipy.optimize import minimize, least_squares 
 
+yields = [1,2,3,5,7,10]
 germany_1 = pd.read_csv('Bond/Germany 1-Year Bond Yield Historical Data.csv')
 germany_2 = pd.read_csv('Bond/Germany 2-Year Bond Yield Historical Data.csv')
 germany_3 = pd.read_csv('Bond/Germany 3-Year Bond Yield Historical Data.csv')
@@ -71,6 +73,9 @@ us_3_df_clear = fun.clear_df(us_3_df)
 us_5_df_clear = fun.clear_df(us_5_df)
 us_7_df_clear = fun.clear_df(us_7_df)
 us_10_df_clear = fun.clear_df(us_10_df)
+
+dates = list(us_1_df_clear.index)
+
 all_df_joint_us = fun.join_df_date(us_1_df_clear, us_2_df_clear, us_3_df_clear, us_5_df_clear, us_7_df_clear, us_10_df_clear, 1, 2, 3, 5, 7, 10)
 
 # Parameters
@@ -82,102 +87,139 @@ tau = 1
 tau2 = 1
 
 params_NS = [beta0, beta1, beta2, tau]
+params_NSS = [beta0, beta1, beta2, beta3, tau, tau2]
 
 #Parameters for Gradient Descent
 alpha_0 = 1
 apx_LS = True
-N = 50
+N = 5
 
 # Compute R
-#all_df_joint_germany[20]['Nelson-Siegel'] = fun.compute_R(all_df_joint_germany[20]['Maturity'], params_NS=params_NS)
-#all_df_joint_germany[20].to_excel('data.xlsx')
 for index, df in enumerate(all_df_joint_us):
     df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS)
     # Export the dataframe to Excel
-    #df.to_excel(f'data_{index}.xlsx')
-
-# Compute f and minimize
-#params_values, f_values = lb.gradient_descent(lambda params: fun.compute_f(all_df_joint_germany[10]['Yield'], all_df_joint_germany[10]['Maturity'], params_NS=params), params_NS, alpha_0 = alpha_0, apx_LS = apx_LS, N = 100)
-#df_params = pd.DataFrame(params_values)
-#df_f = pd.DataFrame(f_values)
-
-# Loop over each dataframe in all_df_joint_germany
+    
+'''# Loop over each dataframe in all_df_joint_germany
 params_values_list = []
 f_values_list = []
+params_values_list_NSS = []
+f_values_list_NSS = []
 
 # Loop over each dataframe in all_df_joint_germany
 for index, df in enumerate(all_df_joint_us):
     
     # Compute f and minimize using gradient descent
     params_values, f_values = lb.gradient_descent(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params), params_NS, alpha_0=alpha_0, apx_LS=apx_LS, N = N)
-    
+    params_values_NSS, f_values_NSS = lb.gradient_descent(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NSS = params), params_NSS, alpha_0=alpha_0, apx_LS=apx_LS, N = N)
+
     # Append results to lists
     params_values_list.append(params_values)
     f_values_list.append(f_values)
+    params_values_list_NSS.append(params_values_NSS)
+    f_values_list_NSS.append(f_values_NSS)
 
 # Convert lists to dataframes
 df_params = pd.DataFrame(params_values_list)
 df_f = pd.DataFrame(f_values_list)
+df_params_NSS = pd.DataFrame(params_values_list_NSS)
+df_f_NSS = pd.DataFrame(f_values_list_NSS)
 
-#Paste Optimal Values into DFs and Plot them
+
+# Paste Optimal Values into DFs and Plot them
 for index, df in enumerate(all_df_joint_us):
 
     # Extract parameter values from df_params
-    beta0 = df_params[N][index][0]
-    beta1 = df_params[N][index][1]
-    beta2 = df_params[N][index][2]
-    tau = df_params[N][index][3]
+    beta0 = df_params.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][0]
+    beta1 = df_params.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][1]
+    beta2 = df_params.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][2]
+    tau = df_params.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][3]
+    
+    beta0_NSS = df_params_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][0]
+    beta1_NSS = df_params_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][1]
+    beta2_NSS = df_params_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][2]
+    beta3_NSS = df_params_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][3]
+    tau_NSS = df_params_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][4]
+    tau2_NSS = df_params_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][5]
     
     # Create params_NS list
     params_NS_optimal = [beta0, beta1, beta2, tau]
-    
+    params_NSS_optimal = [beta0_NSS, beta1_NSS, beta2_NSS, beta3_NSS, tau_NSS, tau2_NSS]
+
     # Compute Nelson-Siegel curve values
     df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS_optimal)
-    
+    df['Nelson-Siegel-Svenson'] = fun.compute_R(df['Maturity'], params_NSS=params_NSS_optimal)
+
     # Plot the curve
     time = range(1, len(df['Yield']) + 1)
-    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], method = 'Gradient Descent', save_folder = save_folder)
+    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], 'Gradient Descent', 'US', dates[index])
+    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel-Svenson'], method = 'GD - NSS')
     
-    
-#Newton Method
+# Newton Method
 params_values_newton = []
-f_values_list_newton = []
+f_values_newton = []
+params_values_newton_NSS = []
+f_values_newton_NSS = []
 
 # Loop over each dataframe in all_df_joint_germany
 for index, df in enumerate(all_df_joint_us):
+    
     # Compute f and minimize using gradient descent
     params_values, f_values = lb.newton_method(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params), params_NS, N = N)
+    params_values_NSS, f_values_NSS = lb.newton_method(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NSS=params), params_NSS, N = N)
+    
     # Append results to lists
     params_values_newton.append(params_values)
-    f_values_list_newton.append(f_values)
+    f_values_newton.append(f_values)
+    params_values_newton_NSS.append(params_values_NSS)
+    f_values_newton_NSS.append(f_values_NSS)
 
 # Convert lists to dataframes
 df_params_newton = pd.DataFrame(params_values_newton)
-df_f_newton = pd.DataFrame(f_values_list_newton)
+df_f_newton = pd.DataFrame(f_values_newton)
+df_params_newton_NSS = pd.DataFrame(params_values_newton_NSS)
+df_f_newton_NSS = pd.DataFrame(f_values_newton_NSS)
 
-#Save everything in Excel
+# Save everything in Excel
 with pd.ExcelWriter('ParametersValues.xlsx') as writer:
     df_params.to_excel(writer, sheet_name='Params', index=False)
     df_f.to_excel(writer, sheet_name='F_values', index=False)
     df_params.to_excel(writer, sheet_name='Params_Newton', index=False)
     df_f.to_excel(writer, sheet_name='F_values_Newton', index=False)
-    
-#paste Optimal for Newton and plot it
+
+
+# Paste Optimal for Newton and plot it
 for index, df in enumerate(all_df_joint_us):
+    
     # Extract parameter values from df_params
-    for i in range(len(df_params_newton) - 1, -1, -1):
-        if not np.isnan(df_params_newton[i][index][0]):
-            beta0 = df_params_newton[i][index][0]
-            beta1 = df_params_newton[i][index][1]
-            beta2 = df_params_newton[i][index][2]
-            tau = df_params_newton[i][index][3]
-            break
+    beta0 = df_params_newton.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][0]
+    beta1 = df_params_newton.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][1]
+    beta2 = df_params_newton.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][2]
+    tau = df_params_newton.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][3]
+        
+    beta0_NSS = df_params_newton_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][0]
+    beta1_NSS = df_params_newton_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][1]
+    beta2_NSS = df_params_newton_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][2]
+    beta3_NSS = df_params_newton_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][3]
+    tau_NSS = df_params_newton_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][4]
+    tau2_NSS = df_params_newton_NSS.iloc[:, 1:].ffill(axis=1).iloc[:, -1][index][5]
             
     # Create params_NS list
     params_NS_optimal = [beta0, beta1, beta2, tau]
+    params_NSS_optimal = [beta0_NSS, beta1_NSS, beta2_NSS, beta3_NSS, tau_NSS, tau2_NSS]
+
     # Compute Nelson-Siegel curve values
     df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS_optimal)
+    df['Nelson-Siegel-Svenson'] = fun.compute_R(df['Maturity'], params_NSS=params_NSS_optimal)
+
     # Plot the curve
     time = range(1, len(df['Yield']) + 1)
-    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], method = 'Newton', save_folder = save_folder)
-    
+    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], 'Newton', 'US', dates[index])
+    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel-Svenson'], method = 'Newton - NSS')
+'''
+# BFGS method
+for index, df in enumerate(all_df_joint_us):
+    results = minimize(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params), params_NS, method='BFGS')
+    fun.plot_curve(yields, df['Yield'], df['Nelson-Siegel'], 'BFGS', 'US', dates[index])
+    print(results.x)
+# Levenberg-Marquardt method
+#results1 = least_squares(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params), params_NS, method='lm')

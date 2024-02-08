@@ -12,6 +12,7 @@ def clear_df(df):
 
     columns_to_drop = ['Open', 'High', 'Low', 'Change %']
     df.drop(columns=columns_to_drop, inplace=True)
+    df['Date'] = pd.to_datetime(df['Date'])
     df.set_index('Date', inplace=True)
     df['Price'] = (df['Price']/100)
     df = df[::-1]
@@ -33,7 +34,7 @@ def join_df_date(df1, df2, df3, df4, df5, df6, maturity1, maturity2, maturity3, 
         all_df.append(df_new)
     return all_df
 
-def compute_R(tau, params_NS=None, params_NSS=None, tau2=None):
+def compute_R(time, params_NS=None, params_NSS=None):
     """
     Computes the R(t) value using the Nelson-Siegel model.
 
@@ -48,17 +49,19 @@ def compute_R(tau, params_NS=None, params_NSS=None, tau2=None):
         The computed R(t) value.
     """
     if params_NS is not None:
-        beta0, beta1, beta2, time = params_NS
+        beta0, beta1, beta2, tau = params_NS
         f1 = (1 - np.exp(-time / tau)) / (time / tau)
         f2 = (1 - np.exp(-time / tau)) / (time / tau) - np.exp(-time / tau)
         return beta0 + beta1 * f1 + beta2 * f2
     else:
-        beta0, beta1, beta2, beta3, time = params_NSS
+        beta0, beta1, beta2, beta3, tau, tau2 = params_NSS
+        f1 = (1 - np.exp(-time / tau)) / (time / tau)
+        f2 = (1 - np.exp(-time / tau)) / (time / tau) - np.exp(-time / tau)
         f3 = (1 - np.exp(-time / tau2)) / (time / tau2) - np.exp(-time / tau2)
         return beta0 + beta1 * f1 + beta2 * f2 + beta3 * f3
     
 
-def compute_f(yields, tau, params_NS=None, params_NSS=None, tau2=None):
+def compute_f(yields, time, params_NS=None, params_NSS=None):
         """
         Computes the f(β0, β1, β2, τ) or f(β0, β1, β2, β3, τ_0, τ_1) value using the Nelson-Siegel model.
 
@@ -67,37 +70,28 @@ def compute_f(yields, tau, params_NS=None, params_NSS=None, tau2=None):
             The computed f(β0, β1, β2, τ) or f(β0, β1, β2, β3, τ_0, τ_1) value.
         """
         if params_NS is not None:
-            residuals = yields - compute_R(tau, params_NS=params_NS)
+            residuals = yields - compute_R(time, params_NS=params_NS)
         else:
-             residuals = yields - compute_R(tau, params_NSS=params_NSS, tau2=tau2)
+             residuals = yields - compute_R(time, params_NSS=params_NSS)
         return np.sum(residuals**2)
     
-def plot_curve(time, yields, R, method = '', save_folder=''):
-        """
-        Plots the curve (t, R(t)) using the computed R(t) values and the historical yield data.
-        """
-        if method == 'Newton':
-            plt.plot(time, yields, label='Historical Yield Data')
-            plt.plot(time, R, label='Nelson-Siegel Curve [Newton]')
-            plt.xlabel('Time')
-            plt.ylabel('Yield')
-            plt.title('Nelson-Siegel Curve vs Historical Yield Data [Newton]')
-            plt.legend()
-            #if save_folder:
-                # Save the plot to the specified folder
-               # plt.savefig(os.path.join(save_folder, 'plot_newton.png'))
-            #else:
-            plt.show()
-        else: 
-            plt.plot(time, yields, label='Historical Yield Data')
-            plt.plot(time, R, label='Nelson-Siegel Curve [Gradient Descent]')
-            plt.xlabel('Time')
-            plt.ylabel('Yield')
-            plt.title('Nelson-Siegel Curve vs Historical Yield Data [Gradient Descent]')
-            plt.legend()
-            plt.show()
-           # if save_folder:
-                # Save the plot to the specified folder
-              #  plt.savefig(os.path.join(save_folder, 'plot_Gradient Descent.png'))
-            #else:
-            plt.show()
+def plot_curve(time, yields, R, method, folder_name, date):
+    """
+    Plots the curve (t, R(t)) using the computed R(t) values and the historical yield data.
+    """
+    plot_folder = os.path.join(folder_name, method)
+    os.makedirs(plot_folder, exist_ok=True)
+
+    plot_folder = os.path.join(plot_folder, 'Plot')
+    os.makedirs(plot_folder, exist_ok=True)
+
+    date_without_time = date.strftime('%Y-%m-%d')
+
+    plt.plot(time, yields, label='Historical Yield Data')
+    plt.plot(time, R, label=f'Nelson-Siegel Curve [{method}]')
+    plt.xlabel('Time')
+    plt.ylabel('Yield')
+    plt.title(f'Nelson-Siegel Curve vs Historical Yield Data [{method}]')
+    plt.legend()
+    plt.savefig(os.path.join(plot_folder, f'{folder_name}-{date_without_time}.png'), dpi=300)
+    plt.close()
