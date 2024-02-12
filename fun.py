@@ -92,19 +92,36 @@ def plot_curve(time, yields, R, country, model, method, date):
 
     date_without_time = date.strftime('%Y-%m-%d')
 
-    plt.scatter(time, yields)
-    plt.scatter(time, R)
-    plt.plot(time, yields, label='Historical Yield Data')
-    plt.plot(time, R, label=f'Nelson-Siegel Curve [{method}]')
-    plt.xlabel('Maturity')
-    plt.ylabel('Yield')
-    plt.gca().yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
-    plt.title(f'Nelson-Siegel Curve vs Historical Yield Data [{method}]')
-    plt.legend()
-    plt.grid()
-    plt.savefig(os.path.join(plot_folder, f'{country}-{date_without_time}.png'))
-    plt.close()
+     # Begin plotting     
+    fig, ax = plt.subplots(figsize=(7, 7))
+    ax.set_facecolor("white")  # Set the plot background color to white
+    fig.patch.set_facecolor('white')
 
+    # Plotting the yield data and the Nelson-Siegel model predictions
+    ax.plot(time, np.array(yields) * 100, 'o-', color="blue", label='Actual Yield')  # Actual yields
+    ax.plot(time, np.array(R) * 100, 'o-', color="orange", label=f'{method} Predictions')  # Nelson-Siegel predictions
+    
+    # Convert yields to percentages and find the min and max
+    yield_percentages = np.array(yields) * 100
+    min_yield = np.floor(min(yield_percentages) * 2) / 2  # Round down to the nearest 0.5%
+    max_yield = np.ceil(max(yield_percentages) * 2) / 2  # Round up to the nearest 0.5%
+
+    # Create a range of ticks from min to max yield, with steps of 0.5%
+    y_ticks = np.arange(min_yield, max_yield + 0.5, 0.3)
+    
+    # Formatting the plot
+    ax.set_title(f'{method} - Fitted Yield Curve', fontsize=12)
+    ax.set_xlabel('Period', fontsize=10)
+    ax.set_ylabel('Interest', fontsize=10)
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter())
+    ax.xaxis.set_ticks(np.arange(1, max(time)+1, 1))
+    ax.yaxis.set_ticks(y_ticks)
+    ax.legend(loc="lower right", title="Legend")
+    ax.grid(True, color='gray', linestyle='--', linewidth=0.5)
+   
+    plt.savefig(os.path.join(plot_folder, f'{country}-{date_without_time}.png'))
+    plt.close(fig)
+     
 
 def excel(list, country, model, method, name_data):
     
@@ -279,3 +296,17 @@ def apx_line_search(f, x, d, alpha_0, c = 0.2, t = 0.8):
         alpha *= t
         
     return alpha
+
+def compute_f_lm(yields, time, params_NS=None, params_NSS=None):
+    """
+    Computes the residuals using the Nelson-Siegel model.
+
+    Returns:
+    - np.array:
+        The residuals.
+    """
+    if params_NS is not None:
+        residuals = yields - compute_R(time, params_NS=params_NS)
+    else:
+        residuals = yields - compute_R(time, params_NSS=params_NSS)
+    return residuals

@@ -95,21 +95,20 @@ all_df_joint = {'Germany': all_df_joint_germany,
                 'United States': all_df_joint_us}
 
 # Parameters
-beta0 = 0.01
-beta1 = 0.05
-beta2 = 0.2
-beta3 = 0.03
-tau = 1
-tau2 = 1
+beta0 = 0.03
+beta1 = 0.015
+beta2 = 0.010
+beta3 = -0.0020
+tau = 2.32
+tau2 = 12.35
 
 params_NS = [beta0, beta1, beta2, tau]
 params_NSS = [beta0, beta1, beta2, beta3, tau, tau2]
 
 #Parameters for Gradient Descent
-alpha_0 = 1
-apx_LS = False
-N = 100
-
+alpha_0 = 0.65 #Learning Rate
+apx_LS = True #Approximate Line search
+N = 100 #Number of Iterations
 
 for name_country, df_joint_country in all_df_joint.items():
     # Compute R
@@ -252,4 +251,34 @@ for name_country, df_joint_country in all_df_joint.items():
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svensson'], name_country, 'Nelson-Siegel-Svensson', 'BFGS', dates[index])
 
     # Levenberg-Marquardt method
-    #results1 = least_squares(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params), params_NS, method='lm')
+    params_values_list = []
+    f_values_list = []
+    params_values_list_NSS = []
+    f_values_list_NSS = []
+
+    #Levenberg-Marquardt method
+    for index, df in eenumerate(df_joint_country):
+    results1 = least_squares(lambda params: fun.compute_f_lm(df['Yield'], df['Maturity'], params_NS=params), params_NS, method = 'lm')
+    results2 = least_squares(lambda params: fun.compute_f_lm(df['Yield'], df['Maturity'], params_NSS=params), params_NSS, method = 'lm')
+    df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=results1.x)
+    df['Nelson-Siegel-Svenson'] = fun.compute_R(df['Maturity'], params_NSS=results2.x)
+    time = range(1, len(df['Yield']) + 1)
+    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel'], 'Nelson-Siegel', 'LM', dates[index])
+    fun.plot_curve(time, df['Yield'], df['Nelson-Siegel-Svenson'], 'Nelson-Siegel-Svensson', 'US', dates[index])
+    
+    params_values_list.append(results1.x)
+    f_values_list.append(results1.optimality)
+    params_values_list_NSS.append(results2.x)
+    f_values_list_NSS.append(results1.optimality)
+    
+    # Convert lists to dataframes
+    df_params = pd.DataFrame(params_values_list)
+    df_f = pd.DataFrame(f_values_list)
+    df_params_NSS = pd.DataFrame(params_values_list_NSS)
+    df_f_NSS = pd.DataFrame(f_values_list_NSS)
+
+    # Save everything in Excel
+    fun.excel(params_values_list, name_country, 'Nelson-Siegel', 'LM', 'Parameters')
+    fun.excel(f_values_list, name_country, 'Nelson-Siegel', 'LM', 'Function')
+    fun.excel(params_values_list_NSS, name_country, 'Nelson-Siegel-Svensson', 'LM', 'Parameters')
+    fun.excel(f_values_list_NSS, name_country, 'Nelson-Siegel-Svensson', 'LM', 'Function')
