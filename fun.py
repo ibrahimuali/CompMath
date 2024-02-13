@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.markers as mk
 import matplotlib.ticker as mtick
 from scipy.linalg import solve, eigh
 from scipy.optimize import approx_fprime
@@ -91,15 +90,15 @@ def plot_curve(time, yields, R, country, model, method, date):
     os.makedirs(plot_folder, exist_ok=True)
 
     date_without_time = date.strftime('%Y-%m-%d')
-
-     # Begin plotting     
+    
+    # Begin plotting     
     fig, ax = plt.subplots(figsize=(7, 7))
     ax.set_facecolor("white")  # Set the plot background color to white
     fig.patch.set_facecolor('white')
 
     # Plotting the yield data and the Nelson-Siegel model predictions
     ax.plot(time, np.array(yields) * 100, 'o-', color="blue", label='Actual Yield')  # Actual yields
-    ax.plot(time, np.array(R) * 100, 'o-', color="orange", label=f'{method} Predictions')  # Nelson-Siegel predictions
+    ax.plot(time, np.array(R) * 100, 'o-', color="orange", label=f'{model} Curve')  # Nelson-Siegel predictions
     
     # Convert yields to percentages and find the min and max
     yield_percentages = np.array(yields) * 100
@@ -110,7 +109,7 @@ def plot_curve(time, yields, R, country, model, method, date):
     y_ticks = np.arange(min_yield, max_yield + 0.5, 0.3)
     
     # Formatting the plot
-    ax.set_title(f'{method} - Fitted Yield Curve', fontsize=12)
+    ax.set_title(f'{method} - {country} - {date_without_time}', fontsize=12)
     ax.set_xlabel('Period', fontsize=10)
     ax.set_ylabel('Interest', fontsize=10)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
@@ -121,7 +120,7 @@ def plot_curve(time, yields, R, country, model, method, date):
    
     plt.savefig(os.path.join(plot_folder, f'{country}-{date_without_time}.png'))
     plt.close(fig)
-     
+
 
 def excel(list, country, model, method, name_data):
     
@@ -296,6 +295,7 @@ def apx_line_search(f, x, d, alpha_0, c = 0.2, t = 0.8):
         alpha *= t
         
     return alpha
+
 
 def compute_f_lm(yields, time, params_NS=None, params_NSS=None):
     """
