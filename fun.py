@@ -135,7 +135,7 @@ def excel(list, country, model, method, name_data):
         with pd.ExcelWriter(excel_file, mode='a', engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name=name_data, index=False)
     else:
-        df.to_excel(excel_file, sheet_name=name_data)
+        df.to_excel(excel_file, sheet_name=name_data, index=False)
 
 
 def newton_method(f, x_0, N, damping_factor = 0.5, eps=1e-6):
