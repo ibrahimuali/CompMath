@@ -1,8 +1,5 @@
 import pandas as pd
-import Lab02_solution as lb
-import fun
-import pprint
-import numpy as np
+import fun 
 from scipy.optimize import minimize, least_squares 
 
 maturities = [1,2,3,5,10]
@@ -87,18 +84,18 @@ us_5_df_clear = fun.clear_df(us_5_df)
 us_10_df_clear = fun.clear_df(us_10_df)
 all_df_joint_us = fun.join_df_date(us_1_df_clear, us_2_df_clear, us_3_df_clear, us_5_df_clear, us_10_df_clear, 1, 2, 3, 5, 10)
 
-dates = list(us_1_df_clear.index)
+dates = list(portugal_1_df_clear.index)
 
-all_df_joint = {'Germany': all_df_joint_germany, 
-                'Portugal': all_df_joint_portugal,
-                'South Korea': all_df_joint_sk,
+all_df_joint = {#'Germany': all_df_joint_germany, 
+                #'Portugal': all_df_joint_portugal,
+                #'South Korea': all_df_joint_sk,
                 'United States': all_df_joint_us}
 
 # Parameters
 beta0 = 0.03
 beta1 = 0.015
-beta2 = 0.010
-beta3 = -0.0020
+beta2 = 0.01
+beta3 = -0.002
 tau = 2.32
 tau2 = 12.35
 
@@ -115,7 +112,7 @@ for name_country, df_joint_country in all_df_joint.items():
     for df in df_joint_country:
         df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS)
         df['Nelson-Siegel-Svensson'] = fun.compute_R(df['Maturity'], params_NSS=params_NSS)
-        
+      
     # Loop over each dataframe in all_df_joint_germany
     params_values_list = []
     f_values_list = []
@@ -126,9 +123,9 @@ for name_country, df_joint_country in all_df_joint.items():
     for df in df_joint_country:
     
         # Compute f and minimize using gradient descent
-        params_values, f_values = lb.gradient_descent(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params),
+        params_values, f_values = fun.gradient_descent(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params),
                                                        params_NS, alpha_0=alpha_0, apx_LS=apx_LS, N = N)
-        params_values_NSS, f_values_NSS = lb.gradient_descent(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NSS = params),
+        params_values_NSS, f_values_NSS = fun.gradient_descent(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NSS = params),
                                                                params_NSS, alpha_0=alpha_0, apx_LS=apx_LS, N = N)
 
         # Append results to lists
@@ -187,9 +184,9 @@ for name_country, df_joint_country in all_df_joint.items():
     for df in df_joint_country:
     
         # Compute f and minimize using gradient descent
-        params_values, f_values = lb.newton_method(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params),
+        params_values, f_values = fun.newton_method(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params),
                                                     params_NS, N = N)
-        params_values_NSS, f_values_NSS = lb.newton_method(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NSS=params),
+        params_values_NSS, f_values_NSS = fun.newton_method(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NSS=params),
                                                             params_NSS, N = N)
     
         # Append results to lists
@@ -238,7 +235,7 @@ for name_country, df_joint_country in all_df_joint.items():
         # Plot the curve
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'Newton', dates[index])
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svenson'], name_country, 'Nelson-Siegel-Svensson', 'Newton', dates[index])
-
+    
     # BFGS method
     params_values_bfgs = []
     f_values_bfgs = []
@@ -255,16 +252,17 @@ for name_country, df_joint_country in all_df_joint.items():
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'BFGS', dates[index])
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svensson'], name_country, 'Nelson-Siegel-Svensson', 'BFGS', dates[index])
         
+        print(results_NS)
         params_values_bfgs.append(results_NS.x)
-        f_values_bfgs.append(results_NS.optimality)
+        f_values_bfgs.append(results_NS.fun)
         params_values_bfgs_NSS.append(results_NSS.x)
-        f_values_bfgs_NSS.append(results_NSS.optimality)
+        f_values_bfgs_NSS.append(results_NSS.fun)
     
     # Save everything in Excel
-    fun.excel(params_values_list, name_country, 'Nelson-Siegel', 'BFGS', 'Parameters')
-    fun.excel(f_values_list, name_country, 'Nelson-Siegel', 'BFGS', 'Function')
-    fun.excel(params_values_list_NSS, name_country, 'Nelson-Siegel-Svensson', 'BFGS', 'Parameters')
-    fun.excel(f_values_list_NSS, name_country, 'Nelson-Siegel-Svensson', 'BFGS', 'Function')
+    fun.excel(params_values_bfgs, name_country, 'Nelson-Siegel', 'BFGS', 'Parameters')
+    fun.excel(f_values_bfgs, name_country, 'Nelson-Siegel', 'BFGS', 'Function')
+    fun.excel(params_values_bfgs_NSS, name_country, 'Nelson-Siegel-Svensson', 'BFGS', 'Parameters')
+    fun.excel(f_values_bfgs_NSS, name_country, 'Nelson-Siegel-Svensson', 'BFGS', 'Function')
 
     # Levenberg-Marquardt method
     params_values_list = []
@@ -273,14 +271,14 @@ for name_country, df_joint_country in all_df_joint.items():
     f_values_list_NSS = []
 
     #Levenberg-Marquardt method
-    for index, df in eenumerate(df_joint_country):
+    for index, df in enumerate(df_joint_country):
         results1 = least_squares(lambda params: fun.compute_f_lm(df['Yield'], df['Maturity'], params_NS=params), params_NS, method = 'lm')
         results2 = least_squares(lambda params: fun.compute_f_lm(df['Yield'], df['Maturity'], params_NSS=params), params_NSS, method = 'lm')
         df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=results1.x)
         df['Nelson-Siegel-Svenson'] = fun.compute_R(df['Maturity'], params_NSS=results2.x)
         time = range(1, len(df['Yield']) + 1)
-        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'LM', dates[index])
-        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svenson'], name_country, 'Nelson-Siegel-Svensson', 'US', dates[index])
+        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'Levenberg-Marquardt', dates[index])
+        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svenson'], name_country, 'Nelson-Siegel-Svensson', 'Levenberg-Marquardt', dates[index])
         
         
         params_values_list.append(results1.x)
