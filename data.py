@@ -86,7 +86,7 @@ all_df_joint_us = fun.join_df_date(us_1_df_clear, us_2_df_clear, us_3_df_clear, 
 
 dates = list(portugal_1_df_clear.index)
 
-all_df_joint = {#'Germany': all_df_joint_germany, 
+all_df_joint = {#'Germany': all_df_joint_germany}
                 #'Portugal': all_df_joint_portugal,
                 #'South Korea': all_df_joint_sk,
                 'United States': all_df_joint_us}
@@ -94,7 +94,7 @@ all_df_joint = {#'Germany': all_df_joint_germany,
 # Parameters
 beta0 = 0.03
 beta1 = 0.015
-beta2 = 0.01
+beta2 = 0.010
 beta3 = -0.002
 tau = 2.32
 tau2 = 12.35
@@ -102,10 +102,10 @@ tau2 = 12.35
 params_NS = [beta0, beta1, beta2, tau]
 params_NSS = [beta0, beta1, beta2, beta3, tau, tau2]
 
-#Parameters for Gradient Descent
-alpha_0 = 0.65 #Learning Rate
-apx_LS = True #Approximate Line search
-N = 100 #Number of Iterations
+# Parameters for Gradient Descent
+alpha_0 = 0.65 # Learning Rate
+apx_LS = True # Approximate Line search
+N = 100 # Number of Iterations
 
 for name_country, df_joint_country in all_df_joint.items():
     # Compute R
@@ -113,7 +113,7 @@ for name_country, df_joint_country in all_df_joint.items():
         df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS)
         df['Nelson-Siegel-Svensson'] = fun.compute_R(df['Maturity'], params_NSS=params_NSS)
       
-    # Loop over each dataframe in all_df_joint_germany
+    '''# Loop over each dataframe in all_df_joint_germany
     params_values_list = []
     f_values_list = []
     params_values_list_NSS = []
@@ -252,7 +252,6 @@ for name_country, df_joint_country in all_df_joint.items():
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'BFGS', dates[index])
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svensson'], name_country, 'Nelson-Siegel-Svensson', 'BFGS', dates[index])
         
-        print(results_NS)
         params_values_bfgs.append(results_NS.x)
         f_values_bfgs.append(results_NS.fun)
         params_values_bfgs_NSS.append(results_NSS.x)
@@ -262,7 +261,7 @@ for name_country, df_joint_country in all_df_joint.items():
     fun.excel(params_values_bfgs, name_country, 'Nelson-Siegel', 'BFGS', 'Parameters')
     fun.excel(f_values_bfgs, name_country, 'Nelson-Siegel', 'BFGS', 'Function')
     fun.excel(params_values_bfgs_NSS, name_country, 'Nelson-Siegel-Svensson', 'BFGS', 'Parameters')
-    fun.excel(f_values_bfgs_NSS, name_country, 'Nelson-Siegel-Svensson', 'BFGS', 'Function')
+    fun.excel(f_values_bfgs_NSS, name_country, 'Nelson-Siegel-Svensson', 'BFGS', 'Function')'''
 
     # Levenberg-Marquardt method
     params_values_list = []
@@ -273,27 +272,18 @@ for name_country, df_joint_country in all_df_joint.items():
     #Levenberg-Marquardt method
     for index, df in enumerate(df_joint_country):
         results1 = least_squares(lambda params: fun.compute_f_lm(df['Yield'], df['Maturity'], params_NS=params), params_NS, method = 'lm')
-        results2 = least_squares(lambda params: fun.compute_f_lm(df['Yield'], df['Maturity'], params_NSS=params), params_NSS, method = 'lm')
         df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=results1.x)
-        df['Nelson-Siegel-Svenson'] = fun.compute_R(df['Maturity'], params_NSS=results2.x)
         time = range(1, len(df['Yield']) + 1)
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'Levenberg-Marquardt', dates[index])
-        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svenson'], name_country, 'Nelson-Siegel-Svensson', 'Levenberg-Marquardt', dates[index])
-        
-        
+
         params_values_list.append(results1.x)
         f_values_list.append(results1.optimality)
-        params_values_list_NSS.append(results2.x)
-        f_values_list_NSS.append(results1.optimality)
     
     # Convert lists to dataframes
     df_params = pd.DataFrame(params_values_list)
     df_f = pd.DataFrame(f_values_list)
-    df_params_NSS = pd.DataFrame(params_values_list_NSS)
-    df_f_NSS = pd.DataFrame(f_values_list_NSS)
 
     # Save everything in Excel
-    fun.excel(params_values_list, name_country, 'Nelson-Siegel', 'LM', 'Parameters')
-    fun.excel(f_values_list, name_country, 'Nelson-Siegel', 'LM', 'Function')
-    fun.excel(params_values_list_NSS, name_country, 'Nelson-Siegel-Svensson', 'LM', 'Parameters')
-    fun.excel(f_values_list_NSS, name_country, 'Nelson-Siegel-Svensson', 'LM', 'Function')
+    fun.excel(params_values_list, name_country, 'Nelson-Siegel', 'Levenberg-Marquardt', 'Parameters')
+    fun.excel(f_values_list, name_country, 'Nelson-Siegel', 'Levenberg-Marquardt', 'Function')
+    

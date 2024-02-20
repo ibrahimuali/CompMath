@@ -20,8 +20,9 @@ for country in countries:
             countries_years.append(f'{country}_{year}')
         except (KeyError, FileNotFoundError):
             continue
-        print(countries_years)
-'''all_df_joint = {}
+        
+
+all_df_joint = {}
 for country in countries:
     try:
         dfs = [bond_yields[year] for year in countries_years]
@@ -103,9 +104,9 @@ for name_country, df_joint_country in all_df_joint.items():
         df['Nelson-Siegel-Svenson'] = fun.compute_R(df['Maturity'], params_NSS=params_NSS_optimal)
 
         # Plot the curve
-        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'Gradient Descent', dates[index])
+        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'Gradient Descent', countries_years[index])
         fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svenson'], name_country, 'Nelson-Siegel-Svensson',
-                        'Gradient Descent', dates[index])
+                        'Gradient Descent', countries_years[index])
     
     # Newton Method
     params_values_newton_NS = []
@@ -166,8 +167,8 @@ for name_country, df_joint_country in all_df_joint.items():
         df['Nelson-Siegel-Svenson'] = fun.compute_R(df['Maturity'], params_NSS=params_NSS_optimal)
 
         # Plot the curve
-        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], 'US', 'Nelson-Siegel', 'Newton', dates[index])
-        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svenson'], 'US', 'Nelson-Siegel-Svensson', 'Newton', dates[index])
+        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], 'US', 'Nelson-Siegel', 'Newton', countries_years[index])
+        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svenson'], 'US', 'Nelson-Siegel-Svensson', 'Newton', countries_years[index])
 
     # BFGS method
     for index, df in enumerate(df_joint_country):
@@ -177,10 +178,9 @@ for name_country, df_joint_country in all_df_joint.items():
         params_NSS_BFGS = results_NSS.x
         df['Nelson-Siegel'] = fun.compute_R(df['Maturity'], params_NS=params_NS_BFGS)
         df['Nelson-Siegel-Svensson'] = fun.compute_R(df['Maturity'], params_NSS=params_NSS_BFGS)
-        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'BFGS', dates[index])
-        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svensson'], name_country, 'Nelson-Siegel-Svensson', 'BFGS', dates[index])
+        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel'], name_country, 'Nelson-Siegel', 'BFGS', countries_years[index])
+        fun.plot_curve(maturities, df['Yield'], df['Nelson-Siegel-Svensson'], name_country, 'Nelson-Siegel-Svensson', 'BFGS', countries_years[index])
 
     # Levenberg-Marquardt method
     #results1 = least_squares(lambda params: fun.compute_f(df['Yield'], df['Maturity'], params_NS=params), params_NS, method='lm')
 
-'''
